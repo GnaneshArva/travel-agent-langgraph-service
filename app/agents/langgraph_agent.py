@@ -7,6 +7,7 @@ from app.services.tool_executor import ToolExecutor
 from app.reasoning.reasoning_service import ReasoningService
 from app.agents.nodes import LangGraphNodes
 from app.agents.graph_builder import LangGraphBuilder
+from app.agents.state import StrategyType
 from app.agents.mock_agent_fallback import MockAgentFallback
 from app.config.settings import settings
 from app.utils.logger import logger
@@ -14,9 +15,9 @@ from app.utils.logger import logger
 
 class LangGraphAgent(BaseAgent):
     """
-    Production Multi-Agent Architecture Service using LangGraph (StateGraph).
+    Production Goal-Driven Autonomous Reasoning Engine using LangGraph (StateGraph).
     Implements BaseAgent abstract interface (Dependency Inversion Principle).
-    Constructs a stateful graph mesh of specialized nodes (Triage, Flight, Hotel, Weather, Synthesizer).
+    Runs dynamic loop execution over PlannerState until goal satisfaction and independent verification.
     """
 
     def __init__(self, tool_executor: ToolExecutor | None = None, reasoning_service: ReasoningService | None = None):
@@ -25,33 +26,51 @@ class LangGraphAgent(BaseAgent):
         self.mock_fallback = MockAgentFallback(self.tool_executor, self.reasoning_service)
 
     async def run(self, system_prompt: str, user_request: str, context: ExecutionContext) -> AgentResponse:
-        """Executes the stateful multi-agent mesh using LangGraph CompiledGraph."""
-        logger.info(f"Invoking LangGraph StateGraph Multi-Agent Mesh with model {settings.agent.model}", component="LangGraphAgent", session_id=context.session_id)
+        """Executes the Goal-Driven Autonomous Loop Engine via LangGraph CompiledGraph."""
+        logger.info(f"Invoking Goal-Driven Autonomous Loop Engine with model {settings.agent.model}", component="LangGraphAgent", session_id=context.session_id)
 
         try:
             nodes = LangGraphNodes(self.tool_executor, self.reasoning_service, context)
             graph_builder = LangGraphBuilder(nodes)
             compiled_graph = graph_builder.build_graph()
 
+            destination = context.travel_request.destination if context.travel_request else "Switzerland"
+            budget = context.travel_request.budget if context.travel_request else 3000.0
+            duration = context.travel_request.duration_days if context.travel_request else 5
+
             initial_state = {
-                "user_request": user_request,
+                "user_goal": user_request,
                 "system_prompt": system_prompt,
-                "destination": context.travel_request.destination if context.travel_request else "Switzerland",
-                "budget": context.travel_request.budget if context.travel_request else 3000.0,
-                "duration_days": context.travel_request.duration_days if context.travel_request else 5,
+                "destination": destination,
+                "budget": budget,
+                "duration_days": duration,
+                "current_strategy": StrategyType.BUDGET_FIRST,
+                "task_queue": {"pending": [], "in_progress": [], "completed": [], "failed": []},
+                "active_actions": [],
                 "messages": [],
                 "flight_results": None,
                 "hotel_results": None,
                 "weather_results": None,
+                "visa_results": None,
+                "attraction_results": None,
                 "final_itinerary": None,
+                "verification_results": [],
+                "reflections": [],
+                "confidence_score": 0.0,
+                "progress_percentage": 0.0,
+                "is_verified": False,
+                "iteration_count": 0,
+                "total_tokens_used": 0,
+                "estimated_cost_usd": 0.0,
                 "tool_calls_executed": [],
                 "current_node": "init",
                 "hand_off_count": 0,
                 "is_complete": False,
+                "termination_reason": None,
             }
 
             final_state = await compiled_graph.ainvoke(initial_state)
-            output_content = final_state.get("final_itinerary") or "Itinerary synthesis complete."
+            output_content = final_state.get("final_itinerary") or "Goal execution and itinerary synthesis complete."
 
             context.agent_raw_response = output_content
             executed_calls = final_state.get("tool_calls_executed", [])
@@ -59,7 +78,7 @@ class LangGraphAgent(BaseAgent):
             return AgentResponse(content=output_content, tool_calls=executed_calls)
 
         except Exception as e:
-            logger.warning(f"LangGraph Multi-Agent execution failed or in mock fallback ({str(e)}). Delegating to MockAgentFallback pipeline.", component="LangGraphAgent")
+            logger.warning(f"Goal-Driven Loop Engine execution failed or in mock fallback ({str(e)}). Delegating to MockAgentFallback pipeline.", component="LangGraphAgent")
 
         return await self.mock_fallback.run(system_prompt, user_request, context)
 

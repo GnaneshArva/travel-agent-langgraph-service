@@ -46,6 +46,16 @@ class FeatureFlags(BaseSettings):
 
     model_config = SettingsConfigDict(extra="ignore")
 
+class LoopConfig(BaseSettings):
+    max_iterations: int = Field(default=10, alias="LOOP_MAX_ITERATIONS")
+    max_token_budget: int = Field(default=30000, alias="LOOP_MAX_TOKEN_BUDGET")
+    max_cost_usd: float = Field(default=0.50, alias="LOOP_MAX_COST_USD")
+    reflection_interval_steps: int = Field(default=2, alias="LOOP_REFLECTION_INTERVAL")
+    stagnation_threshold: int = Field(default=3, alias="LOOP_STAGNATION_THRESHOLD")
+    confidence_threshold: float = Field(default=0.85, alias="LOOP_CONFIDENCE_THRESHOLD")
+
+    model_config = SettingsConfigDict(extra="ignore")
+
 class ApplicationConfig(BaseSettings):
     app_name: str = Field(default="travel-agent-langgraph-service", alias="APP_NAME")
     app_env: str = Field(default="development", alias="APP_ENV")
@@ -56,6 +66,7 @@ class ApplicationConfig(BaseSettings):
     timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
     prompt: PromptConfig = Field(default_factory=PromptConfig)
     features: FeatureFlags = Field(default_factory=FeatureFlags)
+    loop: LoopConfig = Field(default_factory=LoopConfig)
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
