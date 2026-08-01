@@ -7,7 +7,7 @@ from typing import Any
 class StructuredLogger:
     """Structured JSON Logger for Enterprise Observability."""
     
-    def __init__(self, name: str = "travel-agent-service"):
+    def __init__(self, name: str = "travel-agent-langgraph-service"):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.INFO)
         if not self.logger.handlers:

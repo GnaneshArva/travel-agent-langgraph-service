@@ -47,7 +47,7 @@ class FeatureFlags(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
 class ApplicationConfig(BaseSettings):
-    app_name: str = Field(default="travel-agent-service", alias="APP_NAME")
+    app_name: str = Field(default="travel-agent-langgraph-service", alias="APP_NAME")
     app_env: str = Field(default="development", alias="APP_ENV")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
