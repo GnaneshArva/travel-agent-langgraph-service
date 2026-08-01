@@ -1,0 +1,2876 @@
+Application Name
+travel-agent-service
+
+Part 1 — Foundation & Architecture
+Objective
+Build an Enterprise-grade Agentic AI Travel Planner using Python 3.12+ and the OpenAI Agents SDK.
+This application is the central orchestration layer of the entire Enterprise AI Travel Platform.
+Its responsibility is NOT to implement business logic directly. Instead, it coordinates multiple platform services to fulfill a user's travel request.
+The Travel Agent Service should:
+Accept user travel requests
+Build conversational context
+Retrieve long-term memory
+Retrieve enterprise knowledge
+Plan tasks
+Select and invoke MCP tools
+Interact with the LLM using the OpenAI Agents SDK
+Validate requests and responses through Guardrails
+Record execution traces through Observability
+Load versioned prompts through Prompt Management
+Return structured responses
+The application must be modular, maintainable, testable, and aligned with enterprise software engineering best practices.
+Technology Stack
+Use exactly:
+Python 3.12+
+OpenAI Agents SDK
+FastAPI
+Pydantic v2
+asyncio
+httpx
+uv package manager
+Do NOT include:
+Docker
+Kubernetes
+CI/CD
+Cloud deployment
+Authentication
+Authorization
+Monitoring tools
+Databases
+These concerns belong to other repositories.
+Enterprise Architecture Principles
+The implementation must strictly follow:
+Clean Architecture
+SOLID Principles
+Domain-Driven Design (lightweight)
+Dependency Injection
+Strategy Pattern
+Factory Pattern
+Builder Pattern
+Facade Pattern
+Async Programming
+Interface-driven design
+Every major capability must be replaceable without modifying existing implementations.
+Responsibility of this Repository
+This repository is responsible only for:
+Agent orchestration
+Planning
+Context engineering
+Prompt construction
+MCP coordination
+LLM interaction
+Session management
+Response generation
+This repository must NOT implement:
+Business tools
+Memory storage
+Knowledge retrieval logic
+RAG ingestion
+Guardrail logic
+Evaluation logic
+Prompt storage
+Observability storage
+Those responsibilities belong to dedicated platform repositories.
+Platform Integration
+The Travel Agent Service integrates with the following repositories.
+Business Tools
+travel-mcp-server
+Responsibilities:
+Flight search
+Hotel search
+Weather
+Attractions
+Currency conversion
+Transportation
+Memory
+travel-memory-mcp-server
+Responsibilities:
+User profile
+Conversation history
+Travel preferences
+Long-term memory
+Session summaries
+Knowledge
+travel-knowledge-mcp-server
+Responsibilities:
+Destination knowledge
+Visa information
+Travel advisories
+Local regulations
+Tourism information
+Guardrails
+agentic-ai-guardrails
+Responsibilities:
+Input validation
+Prompt injection detection
+Jailbreak detection
+Output validation
+PII masking
+Prompt Management
+agentic-ai-prompt-management
+Responsibilities:
+Prompt templates
+Prompt versions
+Prompt variables
+Prompt rendering
+Observability
+agentic-ai-observability
+Responsibilities:
+Tracing
+Token usage
+Latency
+Cost estimation
+Agent execution timeline
+High-Level Architecture
+                     Client
+                        │
+                        ▼
+                FastAPI Controller
+                        │
+                        ▼
+                Agent Orchestrator
+                        │
+     ┌──────────────────┼──────────────────┐
+     ▼                  ▼                  ▼
+Prompt Builder    Context Builder    Planning Service
+     │                  │                  │
+     ▼                  ▼                  ▼
+Prompt Mgmt      Memory MCP        Knowledge MCP
+                        │
+                        ▼
+                  OpenAI Agent
+                        │
+                        ▼
+                  Tool Executor
+                        │
+                        ▼
+                 Travel MCP Server
+                        │
+                        ▼
+              Response Post Processor
+                        │
+                        ▼
+                     Client
+Runtime Request Flow
+Every request should follow this lifecycle:
+Client Request
+
+↓
+
+FastAPI Controller
+
+↓
+
+Create Session Context
+
+↓
+
+Input Guardrails
+
+↓
+
+Load Prompt Template
+
+↓
+
+Retrieve User Memory
+
+↓
+
+Retrieve Knowledge
+
+↓
+
+Build Context
+
+↓
+
+Planning Service
+
+↓
+
+OpenAI Agent
+
+↓
+
+Tool Calls
+
+↓
+
+Travel MCP Server
+
+↓
+
+Generate Response
+
+↓
+
+Output Guardrails
+
+↓
+
+Observability
+
+↓
+
+Return Response
+No component should bypass this flow.
+Folder Structure
+travel-agent-service/
+
+│
+├── app/
+│
+├── config/
+│
+├── controllers/
+│
+├── agents/
+│
+├── orchestrator/
+│
+├── planning/
+│
+├── reasoning/
+│
+├── prompts/
+│
+├── context/
+│
+├── sessions/
+│
+├── integrations/
+│
+│     ├── memory/
+│     ├── knowledge/
+│     ├── tools/
+│     ├── guardrails/
+│     ├── observability/
+│     └── prompt_management/
+│
+├── services/
+│
+├── dto/
+│
+├── interfaces/
+│
+├── factories/
+│
+├── builders/
+│
+├── strategies/
+│
+├── exceptions/
+│
+├── utils/
+│
+└── main.py
+
+README.md
+
+pyproject.toml
+
+.env.example
+Core Components
+The application consists of the following core components:
+FastAPI Controller
+Responsibilities:
+Accept HTTP requests
+Validate DTOs
+Invoke Agent Orchestrator
+Return structured responses
+Controllers must contain no business logic.
+Agent Orchestrator
+The central coordinator.
+Responsible for:
+Managing execution flow
+Invoking platform services
+Coordinating planning
+Coordinating reasoning
+Managing tool execution
+Building final responses
+No business logic belongs here.
+Planning Service
+Responsible for deciding:
+What needs to be done
+Which MCP tools are required
+Which knowledge sources are needed
+Whether memory should be consulted
+The Planning Service creates an execution plan but does not execute it.
+Context Builder
+Responsible for constructing the complete LLM context.
+Sources include:
+Current user request
+Conversation history
+Long-term memory
+Retrieved documents
+Prompt template
+System instructions
+Prompt Builder
+Responsible for rendering the final system prompt.
+Inputs:
+Prompt template
+Variables
+Context
+User profile
+Travel preferences
+The Prompt Builder never stores prompts.
+OpenAI Agent
+Responsible for:
+Reasoning
+Tool selection
+Tool calling
+Response generation
+Business logic remains external.
+MCP Integration Layer
+Responsible for communication with:
+Memory MCP
+Knowledge MCP
+Travel MCP
+All MCP communication must occur through interfaces.
+Response Processor
+Responsible for:
+Formatting responses
+Validating DTOs
+Invoking output guardrails
+Preparing the final response
+
+Runtime Orchestration & Execution
+
+
+---
+
+Agent Execution Philosophy
+
+The Travel Agent Service should act as an orchestrator, not as a monolithic AI application.
+
+Every major responsibility should be delegated to a dedicated component.
+
+HTTP Request
+
+↓
+
+Agent Orchestrator
+
+↓
+
+Planning
+
+↓
+
+Context Building
+
+↓
+
+Prompt Building
+
+↓
+
+OpenAI Agent
+
+↓
+
+Tool Execution
+
+↓
+
+Response Processing
+
+
+---
+
+Agent Orchestrator
+
+Purpose
+
+The Agent Orchestrator is the heart of the application.
+
+It coordinates the entire request lifecycle.
+
+It should never contain:
+
+Prompt templates
+
+Business logic
+
+Tool implementations
+
+Memory implementation
+
+Knowledge retrieval implementation
+
+
+Instead, it coordinates other services.
+
+
+---
+
+Responsibilities
+
+Initialize execution context
+
+Invoke Guardrails
+
+Load Prompt
+
+Retrieve Memory
+
+Retrieve Knowledge
+
+Build Context
+
+Execute Planning
+
+Invoke OpenAI Agent
+
+Execute MCP Tool Calls
+
+Build Response
+
+Record Observability
+
+Return Result
+
+
+
+---
+
+Runtime Flow
+
+Create Session
+
+↓
+
+Input Guardrails
+
+↓
+
+Prompt Builder
+
+↓
+
+Memory Retrieval
+
+↓
+
+Knowledge Retrieval
+
+↓
+
+Context Builder
+
+↓
+
+Planning Service
+
+↓
+
+OpenAI Agent
+
+↓
+
+Tool Executor
+
+↓
+
+Response Processor
+
+↓
+
+Output Guardrails
+
+↓
+
+Observability
+
+↓
+
+Return Response
+
+
+---
+
+Execution Context
+
+Create a DTO named:
+
+ExecutionContext
+
+The ExecutionContext travels through every component.
+
+It contains:
+
+Session ID
+
+User ID
+
+Conversation ID
+
+User Request
+
+Prompt
+
+Memory
+
+Retrieved Documents
+
+Execution Plan
+
+Tool Results
+
+Agent Response
+
+Metadata
+
+
+Every component receives and enriches this object.
+
+
+---
+
+Session Manager
+
+Responsibilities:
+
+Create Session
+
+Maintain Conversation ID
+
+Track Request ID
+
+Store Execution Metadata
+
+Session Timeout
+
+Correlation ID
+
+
+Generate:
+
+Session ID
+
+Conversation ID
+
+Request ID
+
+Trace ID
+
+These identifiers are passed to every downstream component.
+
+
+---
+
+Planning Service
+
+Purpose:
+
+Determine what the agent should do.
+
+The Planning Service must never execute tools.
+
+
+---
+
+Responsibilities
+
+Determine:
+
+Is memory required?
+
+Is RAG required?
+
+Which MCP tools are needed?
+
+Expected execution order
+
+Expected structured output
+
+
+
+---
+
+Example
+
+User:
+
+Plan a five-day Japan trip.
+
+Execution Plan:
+
+Retrieve Memory
+
+↓
+
+Retrieve Destination Knowledge
+
+↓
+
+Search Flights
+
+↓
+
+Search Hotels
+
+↓
+
+Check Weather
+
+↓
+
+Generate Itinerary
+
+↓
+
+Return JSON Response
+
+Only the execution plan is produced.
+
+
+---
+
+Execution Plan DTO
+
+Create:
+
+ExecutionPlan
+
+Contains:
+
+Plan ID
+
+Ordered Steps
+
+Required MCP Servers
+
+Expected Output
+
+Estimated Tool Count
+
+Estimated Cost
+
+
+
+---
+
+Reasoning Service
+
+Purpose:
+
+Support the OpenAI Agent with reasoning information.
+
+Responsibilities:
+
+Explain tool choices
+
+Explain planning decisions
+
+Capture reasoning metadata
+
+Build reasoning trace
+
+
+Never expose internal reasoning to the user.
+
+Store reasoning only for observability.
+
+
+---
+
+Prompt Builder
+
+Purpose:
+
+Construct the final system prompt.
+
+It does NOT store prompts.
+
+It requests prompt templates from:
+
+agentic-ai-prompt-management
+
+
+---
+
+Responsibilities
+
+Load:
+
+System Prompt
+
+Assistant Prompt
+
+Variables
+
+Travel Policy
+
+User Preferences
+
+
+Render a final prompt.
+
+
+---
+
+Example:
+
+Template:
+
+You are a travel planner.
+
+Destination={{destination}}
+
+Budget={{budget}}
+
+Rendered Prompt:
+
+You are a travel planner.
+
+Destination=Japan
+
+Budget=₹2,00,000
+
+
+---
+
+Context Builder
+
+Purpose:
+
+Construct the complete LLM context.
+
+Sources:
+
+User Request
+
+Conversation History
+
+Memory
+
+Retrieved Documents
+
+Prompt
+
+Tool Results
+
+Session Metadata
+
+
+
+---
+
+Context Pipeline
+
+User Request
+
+↓
+
+Conversation History
+
+↓
+
+Memory
+
+↓
+
+Knowledge
+
+↓
+
+Prompt
+
+↓
+
+Execution Metadata
+
+↓
+
+Final Context
+
+
+---
+
+Memory Integration
+
+Integrate with:
+
+travel-memory-mcp-server
+
+
+---
+
+Responsibilities:
+
+Retrieve:
+
+User Preferences
+
+Previous Trips
+
+Food Preferences
+
+Hotel Preferences
+
+Airline Preferences
+
+Budget History
+
+Recent Conversations
+
+
+Example:
+
+User likes:
+
+Window seat
+
+Vegetarian meals
+
+4-star hotels
+
+The Memory Layer returns structured DTOs only.
+
+Never parse raw JSON.
+
+
+---
+
+Knowledge Integration
+
+Integrate with:
+
+travel-knowledge-mcp-server
+
+
+---
+
+Responsibilities:
+
+Retrieve:
+
+Destination Guides
+
+Visa Information
+
+Weather
+
+Tourism Policies
+
+Local Customs
+
+Travel Restrictions
+
+
+The agent should never query a vector database directly.
+
+Only communicate through the MCP Server.
+
+
+---
+
+MCP Client Layer
+
+Purpose:
+
+Communicate with every MCP server.
+
+Never expose HTTP logic to business services.
+
+
+---
+
+Separate clients:
+
+MemoryMcpClient
+
+KnowledgeMcpClient
+
+TravelToolsMcpClient
+
+GuardrailClient
+
+ObservabilityClient
+
+PromptManagementClient
+
+Each client implements an interface.
+
+
+---
+
+Tool Selection
+
+The OpenAI Agent determines which tools are required.
+
+Example:
+
+User:
+
+Book Switzerland trip.
+
+Tool Sequence:
+
+Search Flights
+
+↓
+
+Search Hotels
+
+↓
+
+Search Attractions
+
+↓
+
+Currency Conversion
+
+↓
+
+Weather
+
+↓
+
+Generate Itinerary
+
+The Travel Agent Service never hardcodes tool selection.
+
+
+---
+
+Tool Executor
+
+Purpose:
+
+Execute MCP Tool Calls.
+
+Responsibilities:
+
+Receive Tool Request
+
+Call MCP Server
+
+Capture Tool Response
+
+Handle Retry
+
+Handle Timeout
+
+Store Tool Result
+
+
+
+---
+
+Execution Flow
+
+Agent
+
+↓
+
+Tool Executor
+
+↓
+
+Travel MCP
+
+↓
+
+Tool Result
+
+↓
+
+Agent
+
+
+---
+
+Parallel Tool Execution
+
+Independent tools should execute concurrently.
+
+Example:
+
+Search Flights
+
+        ||
+
+Search Hotels
+
+        ||
+
+Weather
+
+↓
+
+Wait
+
+↓
+
+Continue
+
+Use asyncio.
+
+Sequential execution only when dependencies exist.
+
+
+---
+
+Retry Strategy
+
+Support configurable retry policies.
+
+Example:
+
+Attempt 1
+
+↓
+
+Failure
+
+↓
+
+Retry
+
+↓
+
+Failure
+
+↓
+
+Retry
+
+↓
+
+Success
+
+Retry should be configurable per MCP server.
+
+
+---
+
+Timeout Strategy
+
+Every external call must have configurable timeout.
+
+Never allow infinite waiting.
+
+On timeout:
+
+Record telemetry
+
+Return structured error
+
+Continue where appropriate
+
+
+
+---
+
+Failure Handling
+
+Failures should not crash the application.
+
+Example:
+
+Hotel Search fails.
+
+Still return:
+
+Flights
+
+Attractions
+
+Weather
+
+
+Include structured warning:
+
+Hotel information is currently unavailable.
+
+
+---
+
+Response Processor
+
+Purpose:
+
+Create final response.
+
+Responsibilities:
+
+Merge Tool Results
+
+Merge Knowledge
+
+Merge Memory
+
+Validate DTO
+
+Call Output Guardrails
+
+Return Final Response
+
+
+
+---
+
+Runtime Sequence
+
+HTTP Request
+
+↓
+
+Create Session
+
+↓
+
+Input Guardrails
+
+↓
+
+Load Prompt
+
+↓
+
+Retrieve Memory
+
+↓
+
+Retrieve Knowledge
+
+↓
+
+Build Context
+
+↓
+
+Planning
+
+↓
+
+OpenAI Agent
+
+↓
+
+Parallel Tool Calls
+
+↓
+
+Response Processor
+
+↓
+
+Output Guardrails
+
+↓
+
+Observability
+
+↓
+
+HTTP Response
+
+
+Implementation Architecture & Design Patterns
+
+
+---
+
+Design Philosophy
+
+Every component should be:
+
+Interface-driven
+
+Replaceable
+
+Independently testable
+
+Loosely coupled
+
+Highly cohesive
+
+
+Business services must never instantiate concrete implementations directly.
+
+Always depend on abstractions.
+
+
+---
+
+Clean Architecture
+
+The application should follow this dependency flow:
+
+Controllers
+
+↓
+
+Orchestrator
+
+↓
+
+Services
+
+↓
+
+Interfaces
+
+↓
+
+Integrations
+
+↓
+
+External Systems
+
+Dependencies must always point inward.
+
+
+---
+
+DTO Layer
+
+All communication between layers must use Pydantic v2 DTOs.
+
+Never use:
+
+Raw dictionaries
+
+Generic JSON objects
+
+Untyped payloads
+
+
+
+---
+
+Request DTOs
+
+Create DTOs such as:
+
+TravelRequest
+
+ConversationRequest
+
+AgentRequest
+
+PlanningRequest
+
+ToolRequest
+
+MemoryRequest
+
+KnowledgeRequest
+
+
+---
+
+Response DTOs
+
+Create:
+
+TravelResponse
+
+AgentResponse
+
+PlanningResponse
+
+ToolResponse
+
+KnowledgeResponse
+
+MemoryResponse
+
+
+---
+
+Context DTOs
+
+Create:
+
+ExecutionContext
+
+PromptContext
+
+SessionContext
+
+ConversationContext
+
+ReasoningContext
+
+ObservationContext
+
+
+---
+
+Tool DTOs
+
+Create:
+
+ToolExecutionRequest
+
+ToolExecutionResponse
+
+ToolResult
+
+ToolError
+
+
+---
+
+Planning DTOs
+
+Create:
+
+ExecutionPlan
+
+PlanStep
+
+ExecutionStep
+
+ExecutionMetadata
+
+
+---
+
+Session DTOs
+
+Create:
+
+SessionInfo
+
+ConversationInfo
+
+RequestMetadata
+
+ResponseMetadata
+
+
+---
+
+Interface Layer
+
+Every external dependency must have an interface.
+
+
+---
+
+Memory Interface
+
+class MemoryProvider(ABC):
+
+    async def retrieve(...)
+
+    async def store(...)
+
+
+---
+
+Knowledge Interface
+
+class KnowledgeProvider(ABC):
+
+    async def retrieve(...)
+
+
+---
+
+Prompt Interface
+
+class PromptProvider(ABC):
+
+    async def load_prompt(...)
+
+
+---
+
+Tool Provider
+
+class ToolProvider(ABC):
+
+    async def execute(...)
+
+
+---
+
+Guardrail Provider
+
+class GuardrailProvider(ABC):
+
+    async def validate(...)
+
+
+---
+
+Observability Provider
+
+class ObservabilityProvider(ABC):
+
+    async def publish(...)
+
+
+---
+
+Every implementation must depend only on these interfaces.
+
+
+---
+
+Strategy Pattern
+
+Use Strategy Pattern wherever multiple implementations are expected.
+
+
+---
+
+Planning Strategy
+
+PlanningStrategy
+
+Possible implementations:
+
+SimplePlanningStrategy
+
+SequentialPlanningStrategy
+
+ParallelPlanningStrategy
+
+CostOptimizedPlanningStrategy
+
+
+---
+
+Context Strategy
+
+ContextBuildingStrategy
+
+Implementations:
+
+MinimalContextStrategy
+
+ConversationContextStrategy
+
+MemoryAwareStrategy
+
+RagAwareStrategy
+
+HybridContextStrategy
+
+
+---
+
+Prompt Strategy
+
+PromptRenderingStrategy
+
+Implementations:
+
+TemplateStrategy
+
+DynamicStrategy
+
+PolicyAwareStrategy
+
+
+---
+
+Response Strategy
+
+ResponseGenerationStrategy
+
+Implementations:
+
+StreamingResponseStrategy
+
+StructuredResponseStrategy
+
+TextOnlyStrategy
+
+
+---
+
+Factory Pattern
+
+The application should never instantiate implementations directly.
+
+
+---
+
+Create:
+
+PlanningFactory
+
+Returns:
+
+PlanningStrategy
+
+
+---
+
+Create:
+
+ContextFactory
+
+Returns:
+
+ContextBuildingStrategy
+
+
+---
+
+Create:
+
+PromptFactory
+
+Returns:
+
+PromptRenderingStrategy
+
+
+---
+
+Create:
+
+ToolFactory
+
+Returns:
+
+ToolProvider
+
+
+---
+
+Create:
+
+MemoryFactory
+
+Returns:
+
+MemoryProvider
+
+
+---
+
+Create:
+
+KnowledgeFactory
+
+Returns:
+
+KnowledgeProvider
+
+
+---
+
+Builder Pattern
+
+Prompt construction is complex.
+
+Use Builder Pattern.
+
+
+---
+
+Create:
+
+PromptBuilder
+
+Responsibilities:
+
+Load template
+
+Inject variables
+
+Inject policies
+
+Inject memory
+
+Inject retrieved knowledge
+
+Build final prompt
+
+
+
+---
+
+Create:
+
+ContextBuilder
+
+Responsibilities:
+
+Merge conversation
+
+Merge memory
+
+Merge documents
+
+Merge execution metadata
+
+Produce final context
+
+
+
+---
+
+Facade Pattern
+
+Multiple platform services should be hidden behind facades.
+
+
+---
+
+Create:
+
+PlatformFacade
+
+Responsibilities:
+
+Coordinate:
+
+Memory
+
+Knowledge
+
+Guardrails
+
+Prompt Management
+
+Observability
+
+
+The Agent Orchestrator communicates only with the facade.
+
+
+---
+
+Dependency Injection
+
+Never create implementations inside services.
+
+Bad:
+
+memory = MemoryMcpClient()
+
+Good:
+
+memory_provider: MemoryProvider
+
+Injected by the application.
+
+Inject:
+
+Memory
+
+Knowledge
+
+Prompt
+
+Observability
+
+Guardrails
+
+MCP Client
+
+
+
+---
+
+Configuration
+
+Create:
+
+ApplicationConfig
+
+Split configuration into sections.
+
+
+---
+
+Agent Configuration
+
+AgentConfig
+
+Examples:
+
+Model
+
+Temperature
+
+Max Tokens
+
+Retry Count
+
+
+
+---
+
+MCP Configuration
+
+McpConfig
+
+Examples:
+
+Memory MCP URL
+
+Knowledge MCP URL
+
+Travel MCP URL
+
+
+
+---
+
+Timeout Configuration
+
+TimeoutConfig
+
+Separate:
+
+Tool Timeout
+
+MCP Timeout
+
+Agent Timeout
+
+
+
+---
+
+Prompt Configuration
+
+PromptConfig
+
+Contains:
+
+Prompt Version
+
+Prompt Name
+
+Environment
+
+
+
+---
+
+Feature Flags
+
+Support enabling/disabling:
+
+Memory
+
+Knowledge
+
+Observability
+
+Guardrails
+
+Streaming
+
+Planning
+
+
+---
+
+Async Programming
+
+Everything interacting with external systems must be asynchronous.
+
+Examples:
+
+Memory retrieval
+
+Knowledge retrieval
+
+Tool execution
+
+Prompt loading
+
+Guardrail validation
+
+Observability publishing
+
+
+Avoid blocking calls.
+
+
+---
+
+Parallel Execution
+
+When dependencies allow, execute concurrently.
+
+Example:
+
+Memory
+
+       ||
+
+Knowledge
+
+       ||
+
+Prompt Loading
+
+↓
+
+Context Builder
+
+Use asyncio.gather().
+
+
+---
+
+Streaming Responses
+
+Support streamed responses from the OpenAI Agent.
+
+Flow:
+
+Agent
+
+↓
+
+Chunk
+
+↓
+
+Chunk
+
+↓
+
+Chunk
+
+↓
+
+Client
+
+The response processor should support both:
+
+Streaming
+
+Non-streaming
+
+
+
+---
+
+Error Handling
+
+Create a dedicated exception hierarchy.
+
+Examples:
+
+AgentException
+
+PlanningException
+
+MemoryException
+
+KnowledgeException
+
+ToolException
+
+PromptException
+
+GuardrailException
+
+StreamingException
+
+Every exception should include:
+
+Error Code
+
+Message
+
+Correlation ID
+
+Retryable flag
+
+
+Avoid generic exceptions.
+
+
+---
+
+Logging
+
+Use structured logging.
+
+Every log should include:
+
+Request ID
+
+Session ID
+
+Conversation ID
+
+Trace ID
+
+Component
+
+Duration
+
+
+Never log:
+
+API keys
+
+Secrets
+
+Raw personal data
+
+
+
+---
+
+Observability Integration
+
+Integrate with:
+
+agentic-ai-observability
+
+Publish lifecycle events such as:
+
+Request Received
+
+↓
+
+Planning Started
+
+↓
+
+Memory Retrieved
+
+↓
+
+Knowledge Retrieved
+
+↓
+
+Prompt Built
+
+↓
+
+Agent Started
+
+↓
+
+Tool Invoked
+
+↓
+
+Tool Completed
+
+↓
+
+Response Generated
+
+↓
+
+Request Completed
+
+Record:
+
+Latency
+
+Token usage
+
+Tool count
+
+Retry count
+
+Errors
+
+Estimated cost
+
+
+The service publishes telemetry but does not persist it.
+
+
+---
+
+Prompt Management Integration
+
+Integrate with:
+
+agentic-ai-prompt-management
+
+Workflow:
+
+Prompt Name
+
+↓
+
+Fetch Active Version
+
+↓
+
+Resolve Variables
+
+↓
+
+Render Prompt
+
+↓
+
+Prompt Builder
+
+The service must never embed prompt text in source code.
+
+
+---
+
+OpenAI Agents SDK Integration
+
+The SDK is responsible for:
+
+Agent execution
+
+Reasoning
+
+Tool selection
+
+Tool invocation
+
+Response generation
+
+
+The Travel Agent Service is responsible for:
+
+Preparing context
+
+Registering tools
+
+Managing execution flow
+
+Handling retries
+
+Processing responses
+
+
+This keeps orchestration separate from model capabilities.
+
+
+---
+
+Testing Considerations
+
+Design for testability by mocking:
+
+Memory provider
+
+Knowledge provider
+
+Tool provider
+
+Prompt provider
+
+Guardrail provider
+
+Observability provider
+
+
+This allows isolated testing of orchestration without depending on external services.
+
+
+
+End-to-End Execution, Standards & Deliverables
+
+
+---
+
+End-to-End Request Lifecycle
+
+Every request processed by the Travel Agent Service must follow a deterministic lifecycle.
+
+Client
+
+↓
+
+FastAPI Controller
+
+↓
+
+Session Manager
+
+↓
+
+Input Guardrails
+
+↓
+
+Load Prompt Template
+
+↓
+
+Retrieve User Memory
+
+↓
+
+Retrieve Knowledge
+
+↓
+
+Build Context
+
+↓
+
+Planning Service
+
+↓
+
+OpenAI Agent
+
+↓
+
+Tool Execution
+
+↓
+
+Response Processor
+
+↓
+
+Output Guardrails
+
+↓
+
+Publish Observability
+
+↓
+
+Return Response
+
+No component should bypass this pipeline.
+
+
+---
+
+Complete Runtime Sequence
+
+User
+
+↓
+
+POST /travel/plan
+
+↓
+
+TravelController
+
+↓
+
+AgentOrchestrator
+
+↓
+
+PlatformFacade
+
+        ||
+
+        ├── Prompt Management
+
+        ├── Memory MCP
+
+        ├── Knowledge MCP
+
+        └── Guardrails
+
+↓
+
+Planning Service
+
+↓
+
+Context Builder
+
+↓
+
+Prompt Builder
+
+↓
+
+OpenAI Agent
+
+↓
+
+Travel MCP Server
+
+↓
+
+Response Processor
+
+↓
+
+Guardrails
+
+↓
+
+Observability
+
+↓
+
+HTTP Response
+
+
+---
+
+Sequence Diagram
+
+Client
+   │
+   ▼
+Travel Controller
+   │
+   ▼
+Agent Orchestrator
+   │
+   ├────────► Guardrails
+   │
+   ├────────► Prompt Management
+   │
+   ├────────► Memory MCP
+   │
+   ├────────► Knowledge MCP
+   │
+   ▼
+Planning Service
+   │
+   ▼
+Context Builder
+   │
+   ▼
+Prompt Builder
+   │
+   ▼
+OpenAI Agent
+   │
+   ▼
+Travel MCP Server
+   │
+   ▼
+Response Processor
+   │
+   ├────────► Guardrails
+   │
+   ├────────► Observability
+   │
+   ▼
+Client
+
+
+---
+
+Agent Decision Flow
+
+The agent should follow a consistent reasoning process.
+
+Understand Request
+
+↓
+
+Need Memory?
+
+↓
+
+Need Knowledge?
+
+↓
+
+Need Tools?
+
+↓
+
+Create Plan
+
+↓
+
+Execute Plan
+
+↓
+
+Generate Response
+
+↓
+
+Validate Response
+
+↓
+
+Return Result
+
+Planning and execution remain separate responsibilities.
+
+
+---
+
+Tool Calling Lifecycle
+
+Agent
+
+↓
+
+Identify Required Tool
+
+↓
+
+Build Tool Request
+
+↓
+
+Tool Executor
+
+↓
+
+Travel MCP Server
+
+↓
+
+Tool Response
+
+↓
+
+Validate Result
+
+↓
+
+Return To Agent
+
+The agent must not invoke tools directly; all calls go through the Tool Executor.
+
+
+---
+
+Context Construction Order
+
+Context should be assembled in this order:
+
+System Prompt
+
+↓
+
+Travel Policies
+
+↓
+
+Conversation History
+
+↓
+
+User Memory
+
+↓
+
+Retrieved Knowledge
+
+↓
+
+Current User Request
+
+↓
+
+Execution Metadata
+
+This ensures a consistent and predictable prompt composition.
+
+
+---
+
+Parallel Execution Model
+
+Whenever possible, independent tasks should execute concurrently.
+
+Prompt Loading
+
+      ||
+
+Memory Retrieval
+
+      ||
+
+Knowledge Retrieval
+
+↓
+
+Context Builder
+
+↓
+
+Planning
+
+↓
+
+Agent
+
+Similarly, independent tool calls should be parallelized.
+
+Flights
+
+     ||
+
+Hotels
+
+     ||
+
+Weather
+
+↓
+
+Merge Results
+
+↓
+
+Continue
+
+
+---
+
+Standard Coding Guidelines
+
+Follow these conventions throughout the project:
+
+Python type hints everywhere.
+
+Pydantic v2 DTOs only.
+
+Async-first design.
+
+Constructor-based dependency injection.
+
+Interfaces for external integrations.
+
+One responsibility per class.
+
+Business logic only in services.
+
+No business logic in controllers.
+
+Avoid global mutable state.
+
+Prefer composition over inheritance.
+
+
+
+---
+
+Folder Responsibilities
+
+controllers/
+
+HTTP endpoints only.
+
+
+
+---
+
+orchestrator/
+
+Coordinates the complete workflow.
+
+
+
+---
+
+planning/
+
+Produces execution plans.
+
+
+
+---
+
+reasoning/
+
+Maintains reasoning metadata.
+
+
+
+---
+
+context/
+
+Builds LLM context.
+
+
+
+---
+
+prompts/
+
+Renders prompts.
+
+
+
+---
+
+integrations/
+
+All MCP and external platform clients.
+
+
+
+---
+
+services/
+
+Core application services.
+
+
+
+---
+
+dto/
+
+Request/response/context models.
+
+
+
+---
+
+interfaces/
+
+Contracts for all pluggable components.
+
+
+
+---
+
+builders/
+
+Prompt and context builders.
+
+
+
+---
+
+factories/
+
+Strategy and provider factories.
+
+
+
+---
+
+strategies/
+
+Runtime behavior implementations.
+
+
+
+---
+
+Configuration Files
+
+Provide:
+
+.env.example
+
+Include examples for:
+
+OpenAI model
+
+MCP endpoints
+
+Timeout values
+
+Retry counts
+
+Feature flags
+
+Streaming enabled
+
+Prompt version
+
+Log level
+
+
+Configuration should be environment-driven rather than hardcoded.
+
+
+---
+
+Security Guidelines
+
+The service should:
+
+Never log secrets.
+
+Never expose internal prompts.
+
+Never expose reasoning traces.
+
+Never expose stack traces to clients.
+
+Validate all external inputs.
+
+Sanitize tool parameters.
+
+Propagate correlation IDs across service calls.
+
+
+Detailed safety policies belong in agentic-ai-guardrails; this service integrates with them.
+
+
+---
+
+Performance Goals
+
+Design targets:
+
+Minimize latency by parallelizing independent operations.
+
+Avoid duplicate memory or knowledge retrievals.
+
+Reuse context during a request where appropriate.
+
+Stream responses when supported.
+
+Use configurable timeouts and retries.
+
+Avoid blocking I/O.
+
+
+
+---
+
+Extensibility
+
+Adding a new MCP server should require:
+
+1. Implement a provider interface.
+
+
+2. Add a client under integrations/.
+
+
+3. Register it with the appropriate factory or dependency injection.
+
+
+4. Update configuration.
+
+
+5. Use it from the orchestrator or planning logic as needed.
+
+
+
+Existing components should not require modification.
+
+
+---
+
+Quality Attributes
+
+The application should be:
+
+Modular
+
+Maintainable
+
+Scalable
+
+Testable
+
+Observable
+
+Extensible
+
+Resilient
+
+Configurable
+
+
+
+---
+
+Deliverables
+
+Generate a complete runnable repository including:
+
+FastAPI application
+
+OpenAI Agents SDK integration
+
+Clean Architecture
+
+Complete folder structure
+
+DTOs
+
+Interfaces
+
+Factories
+
+Builders
+
+Strategies
+
+Dependency Injection
+
+Async programming
+
+Streaming support
+
+MCP client implementations
+
+Prompt rendering
+
+Context building
+
+Planning service
+
+Agent orchestrator
+
+Structured logging
+
+Configuration management
+
+Comprehensive README
+
+Sample requests and responses
+
+Example integration with all platform repositories
+
+
+
+---
+
+README Requirements
+
+The README should include:
+
+1. Project overview
+
+
+2. Architecture diagram
+
+
+3. Request lifecycle
+
+
+4. Folder structure
+
+
+5. Technology stack
+
+
+6. Runtime components
+
+
+7. Integration with:
+
+travel-mcp-server
+
+travel-memory-mcp-server
+
+travel-knowledge-mcp-server
+
+agentic-ai-guardrails
+
+agentic-ai-observability
+
+agentic-ai-prompt-management
+
+
+
+8. Planning flow
+
+
+9. Context engineering
+
+
+10. Prompt management
+
+
+11. Tool execution
+
+
+12. Streaming responses
+
+
+13. Configuration
+
+
+14. Extending the platform
+
+
+15. Local execution instructions
+
+
+
+
+---
+
+Future Enhancements
+
+Design extension points for future capabilities such as:
+
+Multi-agent collaboration
+
+Human-in-the-loop approval workflows
+
+Model routing across multiple providers
+
+Advanced planning strategies
+
+Workflow persistence and resume
+
+Background task execution
+
+Multi-language support
+
+Agent capability registry
+
+Dynamic tool discovery
+
+Policy-driven orchestration
+
+
+These should be accommodated through interfaces and strategy implementations without major architectural changes.
+
+
+---
+
+Final Enterprise Runtime Architecture
+
+Client
+                              │
+                              ▼
+                    travel-agent-service
+                              │
+        ┌──────────────┬──────────────┬──────────────┐
+        ▼              ▼              ▼              ▼
+Prompt Management   Memory MCP   Knowledge MCP   Guardrails
+        │              │              │              │
+        └──────────────┴──────────────┴──────────────┘
+                              │
+                              ▼
+                     Context Builder
+                              │
+                              ▼
+                     Planning Service
+                              │
+                              ▼
+                      OpenAI Agent SDK
+                              │
+                              ▼
+                     Travel MCP Server
+                              │
+                              ▼
+                    Response Processor
+                              │
+                 ┌────────────┴────────────┐
+                 ▼                         ▼
+           Guardrails              Observability
+                 │                         │
+                 └────────────┬────────────┘
+                              ▼
+                           Response
+
+
+---
+
+Final Objective
+
+The generated codebase should demonstrate how a production-style enterprise Agentic AI application orchestrates memory, retrieval, prompt management, guardrails, observability, and MCP tools while keeping each responsibility isolated behind well-defined interfaces. The result should be a modular service that can evolve as the surrounding AI platform grows, without tightly coupling application logic to any individual platform component.
+

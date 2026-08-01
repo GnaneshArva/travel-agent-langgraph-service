@@ -1,0 +1,114 @@
+PlanningStrategy
+├── SequentialPlanningStrategy
+├── ParallelPlanningStrategy
+├── HierarchicalPlanningStrategy
+├── ReactivePlanningStrategy
+├── CostOptimizedPlanningStrategy
+
+ContextBuildingStrategy
+├── MinimalContextStrategy
+├── MemoryAwareStrategy
+├── RagAwareStrategy
+├── HybridContextStrategy
+
+PromptRenderingStrategy
+├── TemplateStrategy
+├── DynamicStrategy
+├── PolicyAwareStrategy
+
+ModelSelectionStrategy
+├── SingleModelStrategy
+├── CostAwareModelStrategy
+├── LatencyOptimizedStrategy
+├── QualityOptimizedStrategy
+├── MultiModelStrategy
+
+ToolSelectionStrategy
+├── KeywordBasedStrategy
+├── SemanticMatchingStrategy
+├── CapabilityBasedStrategy
+├── PolicyRestrictedStrategy
+
+ToolExecutionStrategy
+├── SequentialExecutionStrategy
+├── ParallelExecutionStrategy
+├── RetryExecutionStrategy
+├── CircuitBreakerStrategy
+├── HumanApprovalStrategy
+
+MemoryStrategy
+├── ShortTermMemoryStrategy
+├── LongTermMemoryStrategy
+├── EpisodicMemoryStrategy
+├── SemanticMemoryStrategy
+├── HybridMemoryStrategy
+
+RetrievalStrategy
+├── VectorSearchStrategy
+├── HybridSearchStrategy
+├── GraphRetrievalStrategy
+├── MultiHopRetrievalStrategy
+├── MetadataFilteredStrategy
+
+ReasoningStrategy
+├── DirectAnswerStrategy
+├── ChainOfThoughtStrategy
+├── ReActStrategy
+├── TreeOfThoughtStrategy
+├── ReflectionStrategy
+
+AgentRoutingStrategy
+├── SingleAgentStrategy
+├── MultiAgentStrategy
+├── CapabilityBasedRoutingStrategy
+├── SupervisorStrategy
+├── SwarmStrategy
+
+TaskDelegationStrategy
+├── RoundRobinStrategy
+├── CapabilityMatchStrategy
+├── LoadBalancedStrategy
+├── PriorityBasedStrategy
+
+ResponseGenerationStrategy
+├── StructuredResponseStrategy
+├── StreamingResponseStrategy
+├── TextOnlyStrategy
+├── JsonResponseStrategy
+├── MarkdownStrategy
+
+ValidationStrategy
+├── SchemaValidationStrategy
+├── GuardrailValidationStrategy
+├── SafetyValidationStrategy
+├── PolicyValidationStrategy
+
+ErrorHandlingStrategy
+├── RetryStrategy
+├── FallbackStrategy
+├── CompensatingActionStrategy
+├── EscalationStrategy
+
+CachingStrategy
+├── NoCacheStrategy
+├── PromptCacheStrategy
+├── EmbeddingCacheStrategy
+├── ResponseCacheStrategy
+
+ObservationStrategy
+├── LoggingStrategy
+├── MetricsStrategy
+├── TracingStrategy
+├── AuditStrategy
+
+AuthenticationStrategy
+├── ApiKeyStrategy
+├── OAuthStrategy
+├── JWTStrategy
+├── ServiceAccountStrategy
+
+RateLimitingStrategy
+├── FixedWindowStrategy
+├── SlidingWindowStrategy
+├── TokenBucketStrategy
+├── LeakyBucketStrategy
