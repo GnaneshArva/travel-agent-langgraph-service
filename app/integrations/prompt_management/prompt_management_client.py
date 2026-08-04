@@ -12,6 +12,7 @@ from typing import Any
 from app.interfaces.prompt import PromptProvider
 from app.dto.context import PromptContext
 from app.config.settings import settings
+from app.prompts.prompt_cache import prompt_cache
 from app.utils.logger import logger
 
 # Dynamically load PromptSdk & PromptRequest from agentic-ai-prompt-management
@@ -81,7 +82,22 @@ class PromptManagementClient(PromptProvider):
     ) -> PromptContext:
         vars_dict = variables or {}
         version_str = version or settings.prompt.prompt_version
+        cache_key = f"template:{template_name}:{version_str}:{sorted(vars_dict.items())}"
+
+        # 1. Check Prompt Cache
+        cached_template = prompt_cache.get(cache_key)
+        if cached_template is not None:
+            logger.info(f"Loaded prompt template '{template_name}' version {version_str} from PromptCache", component="PromptManagementClient")
+            return PromptContext(
+                template_name=template_name,
+                rendered_prompt=cached_template,
+                system_instruction=cached_template,
+                variables=vars_dict
+            )
+
         logger.info(f"Loading prompt template '{template_name}' version {version_str} via PromptSdk", component="PromptManagementClient")
+
+        rendered_result = None
 
         if settings.features.enable_prompt_management and self._sdk:
             try:
@@ -91,23 +107,23 @@ class PromptManagementClient(PromptProvider):
                     variables=vars_dict
                 )
                 response = await self._sdk.get_prompt(request)
-                return PromptContext(
-                    template_name=template_name,
-                    rendered_prompt=response.rendered_prompt,
-                    system_instruction=response.rendered_prompt,
-                    variables=vars_dict
-                )
+                rendered_result = response.rendered_prompt
             except Exception as e:
                 logger.warning(f"Prompt Management SDK call failed ({str(e)}). Falling back to default system template.", component="PromptManagementClient")
 
-        default_system_prompt = (
-            "You are an Enterprise AI Travel Planner orchestrator. "
-            "Your role is to plan trips, coordinate flight and hotel searches, retrieve relevant travel advisories, "
-            "and craft comprehensive, personalized travel itineraries using registered MCP tools."
-        )
+        if rendered_result is None:
+            rendered_result = (
+                "You are an Enterprise AI Travel Planner orchestrator. "
+                "Your role is to plan trips, coordinate flight and hotel searches, retrieve relevant travel advisories, "
+                "and craft comprehensive, personalized travel itineraries using registered MCP tools."
+            )
+
+        # 2. Store in Prompt Cache
+        prompt_cache.set(cache_key, rendered_result)
+
         return PromptContext(
             template_name=template_name,
-            rendered_prompt=default_system_prompt,
-            system_instruction=default_system_prompt,
+            rendered_prompt=rendered_result,
+            system_instruction=rendered_result,
             variables=vars_dict
         )

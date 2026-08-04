@@ -32,6 +32,8 @@ class PromptConfig(BaseSettings):
     prompt_version: str = Field(default="1.0.0", alias="PROMPT_VERSION")
     prompt_name: str = Field(default="travel_agent_system", alias="PROMPT_NAME")
     environment: str = Field(default="development", alias="APP_ENV")
+    prompt_cache_ttl: int = Field(default=300, alias="PROMPT_CACHE_TTL")
+    prompt_cache_max_size: int = Field(default=100, alias="PROMPT_CACHE_MAX_SIZE")
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -41,6 +43,7 @@ class FeatureFlags(BaseSettings):
     enable_guardrails: bool = Field(default=True, alias="ENABLE_GUARDRAILS")
     enable_observability: bool = Field(default=True, alias="ENABLE_OBSERVABILITY")
     enable_prompt_management: bool = Field(default=True, alias="ENABLE_PROMPT_MANAGEMENT")
+    enable_prompt_caching: bool = Field(default=True, alias="ENABLE_PROMPT_CACHING")
     enable_streaming: bool = Field(default=True, alias="ENABLE_STREAMING")
     enable_planning: bool = Field(default=True, alias="ENABLE_PLANNING")
 
