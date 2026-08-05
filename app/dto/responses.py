@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 class FlightOption(BaseModel):
@@ -23,6 +23,15 @@ class DailyItinerary(BaseModel):
     activities: list[str] = Field(default_factory=list)
     dining_recommendations: list[str] = Field(default_factory=list)
 
+class ApprovalRequestDTO(BaseModel):
+    approval_id: str
+    action_type: str
+    risk_level: str = "HIGH"
+    amount_usd: float = 0.0
+    reason: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+    expiration_timestamp: float = 0.0
+
 class TravelResponse(BaseModel):
     session_id: str
     conversation_id: str
@@ -38,6 +47,8 @@ class TravelResponse(BaseModel):
     currency: str = "USD"
     warnings: list[str] = Field(default_factory=list)
     applied_preferences: list[str] = Field(default_factory=list)
+    requires_human_approval: bool = False
+    approval_request: Optional[ApprovalRequestDTO] = None
     execution_time_ms: float = 0.0
 
 class AgentResponse(BaseModel):

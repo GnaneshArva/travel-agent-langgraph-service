@@ -32,6 +32,20 @@ class ResponseProcessor:
                 if "Coherence" in g_name or "coherence" in str(v).lower():
                     logger.info("Coherence warning detected on output response", component="ResponseProcessor")
                     response.warnings.append("Output coherence warning: Logical sequence or transition check triggered remediation.")
+                elif "Risk" in g_name or "approval" in str(v).lower():
+                    logger.warning("HITL Approval required detected in output guardrails", component="ResponseProcessor")
+                    response.requires_human_approval = True
+                    response.status = "AWAITING_HUMAN_APPROVAL"
+                    response.warnings.append("Action paused: Human approval required before booking or payment.")
+                    details = v.get("details", {})
+                    response.approval_request = {
+                        "approval_id": f"appr_{context.session_id[:8]}",
+                        "action_type": "BOOKING_AND_PAYMENT",
+                        "risk_level": details.get("risk_level", "HIGH"),
+                        "amount_usd": response.estimated_total_cost,
+                        "reason": v.get("message", "Human approval required before finalizing reservation."),
+                        "payload": {"destination": response.destination, "cost": response.estimated_total_cost}
+                    }
 
         return response
 
