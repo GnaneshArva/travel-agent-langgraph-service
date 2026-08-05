@@ -23,9 +23,15 @@ class ResponseProcessor:
             session_id=context.session_id
         )
         if not is_allowed:
-            logger.warning("Output guardrail flagged response. Applying redaction.", component="ResponseProcessor")
+            logger.warning("Output guardrail flagged response. Applying redaction/remediation.", component="ResponseProcessor")
             response.summary = sanitized_summary
-            response.warnings.append("Output was modified by security policy.")
+            response.warnings.append("Output was modified by security/coherence policy.")
+        elif meta and "violations" in meta:
+            for v in meta.get("violations", []):
+                g_name = v.get("guardrail_name", "")
+                if "Coherence" in g_name or "coherence" in str(v).lower():
+                    logger.info("Coherence warning detected on output response", component="ResponseProcessor")
+                    response.warnings.append("Output coherence warning: Logical sequence or transition check triggered remediation.")
 
         return response
 
