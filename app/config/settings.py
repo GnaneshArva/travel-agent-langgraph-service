@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AgentConfig(BaseSettings):
     model: str = Field(default="gpt-4o", alias="OPENAI_MODEL")
     temperature: float = Field(default=0.7, alias="AGENT_TEMPERATURE")
+    top_p: float = Field(default=0.9, alias="AGENT_TOP_P")
+    top_k: int = Field(default=50, alias="AGENT_TOP_K")
     max_tokens: int = Field(default=4096, alias="AGENT_MAX_TOKENS")
     retry_count: int = Field(default=3, alias="AGENT_RETRY_COUNT")
     openai_api_key: str = Field(default="mock-key", alias="OPENAI_API_KEY")
